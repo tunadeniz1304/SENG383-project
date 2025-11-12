@@ -16,7 +16,7 @@ Submission date: 11.11.2025
 Reviewing peer's submissions: 12.11.2025 lab lesson
 
 Missings and faults of Designs created by Tuna:
-1-
+1-Dividing activity diagram for users perspectively.
 
 Missings and faults of Designs created by Dogukan:
 1-
