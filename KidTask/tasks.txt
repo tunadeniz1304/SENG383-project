@@ -1,0 +1,2 @@
+1764096581229,Odamı Topla,Tüm oyuncakları kutuya koy,20,APPROVED,DAILY,ali,5
+1764096581254,Bahçeyi Sula,Çiçekleri sula,50,PENDING,WEEKLY,ali,0
