@@ -25,3 +25,5 @@ Submitting the Design documents via Webonline
 
 Coding Part for KidTask
 Starting with creating the files and writing classes according to the class diagrams.
+Forming the implementation of KidTask by:Tuna
+Forming the implementation of BeePlan by:Doğukan
