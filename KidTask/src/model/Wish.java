@@ -15,7 +15,18 @@ public class Wish {
         this.requiredLevel = requiredLevel;
     }
     
+    public String toCSV() {
+        return name + "," + cost + "," + owner + "," + status + "," + requiredLevel;
+    }
     
+    public static Wish fromCSV(String line) {
+        String[] parts = line.split(",");
+        if (parts.length < 5) return null;
+        
+        Wish w = new Wish(parts[0], Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[4]));
+        w.status = WishStatus.valueOf(parts[3]);
+        return w;
+    }
     
     
     public String getName() { return name; }
