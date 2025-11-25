@@ -22,3 +22,6 @@ Missings and faults of Designs created by Tuna:
 
 17.11.2025
 Submitting the Design documents via Webonline
+
+Coding Part for KidTask
+Starting with creating the files and writing classes according to the class diagrams.
