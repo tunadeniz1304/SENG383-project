@@ -14,4 +14,15 @@ public class Wish {
         this.status = WishStatus.PENDING;
         this.requiredLevel = requiredLevel;
     }
+    
+    
+    
+    
+    public String getName() { return name; }
+    public int getCost() { return cost; }
+    public String getOwner() { return owner; }
+    public WishStatus getStatus() { return status; }
+    public int getRequiredLevel() { return requiredLevel; }
+    
+    public void setStatus(WishStatus status) { this.status = status; }
 }
