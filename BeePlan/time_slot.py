@@ -1,11 +1,10 @@
 class TimeSlot:
     def __init__(self, start_time: str, end_time: str) -> None:
-        pass
+        self.start_time = start_time
+        self.end_time = end_time
 
     def get_start_time(self) -> str:
-        pass
+        return self.start_time
 
     def get_end_time(self) -> str:
-        pass
-
-
+        return self.end_time
