@@ -102,4 +102,12 @@ public class TaskManager {
         }
         System.out.println("---------------------\n");
     }
+ // GUI İÇİN GEREKLİ GETTER METODLARI
+    public List<Task> getAllTasks() {
+        return tasks;
+    }
+    
+    public User getCurrentUser() {
+        return currentUser;
+    }
 }
