@@ -23,5 +23,5 @@ class Section:
     def get_course(self) -> "Course":
         return self.course
 
-    def add_time_slot(self, start_time: str, end_time: str) -> None:
-        self.time_slots.append(TimeSlot(start_time, end_time))
+    def add_time_slot(self, start_time: str, end_time: str, slot_type: str = "Lecture") -> None:
+        self.time_slots.append(TimeSlot(start_time, end_time, slot_type))
