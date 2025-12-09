@@ -1,2 +1,3 @@
-1764096581229,Odamı Topla,Tüm oyuncakları kutuya koy,20,APPROVED,DAILY,ali,5
-1764096581254,Bahçeyi Sula,Çiçekleri sula,50,PENDING,WEEKLY,ali,0
+1,Odamı Topla,Tüm oyuncakları kutuya koy ve yatağı düzelt,20,PENDING,DAILY,ali,5
+2,Bahçeyi Sula,Çiçekleri ve sebzeleri sula,50,COMPLETED,WEEKLY,ali,5
+3,Ödev Yap,Matematik ödevini tamamla,30,PENDING,DAILY,ali,5
