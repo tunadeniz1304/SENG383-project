@@ -35,7 +35,7 @@ public class Main {
         }
         
         System.out.println("\n=== SİMÜLASYON BİTTİ ===");
-        System.out.println("Lütfen projenize sağ tıklayıp 'Refresh' yapın.");
+        System.out.println("Projeyi refresh edin.");
         System.out.println("users.txt dosyasında Ali'nin puanının arttığını göreceksiniz.");
     }
 }

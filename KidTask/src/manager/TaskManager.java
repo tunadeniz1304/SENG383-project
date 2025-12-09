@@ -52,16 +52,27 @@ public class TaskManager {
     }
     
     
-    public void completeTask(String taskId) {
+    public boolean completeTask(String taskId) {
         for (Task t : tasks) {
             if (t.getId().equals(taskId)) {
-                t.setStatus(TaskStatus.COMPLETED);
-                DataManager.saveTasks(tasks);
-                System.out.println("Görev Tamamlandı İşaretlendi: " + t.getTitle());
-                return;
+                // APPROVED görevler tekrar COMPLETED yapılamaz
+                if (t.getStatus() == TaskStatus.APPROVED) {
+                    System.out.println("HATA: Bu görev zaten onaylanmış, durumu değiştirilemez.");
+                    return false;
+                }
+                // Sadece PENDING görevler COMPLETED yapılabilir
+                if (t.getStatus() == TaskStatus.PENDING) {
+                    t.setStatus(TaskStatus.COMPLETED);
+                    DataManager.saveTasks(tasks);
+                    System.out.println("Görev Tamamlandı İşaretlendi: " + t.getTitle());
+                    return true;
+                }
+                System.out.println("HATA: Bu görev zaten tamamlanmış.");
+                return false;
             }
         }
         System.out.println("HATA: Görev bulunamadı.");
+        return false;
     }
     
     
@@ -109,5 +120,67 @@ public class TaskManager {
     
     public User getCurrentUser() {
         return currentUser;
+    }
+    
+    // WISH SİSTEMİ METODLARI
+    public List<Wish> getAllWishes() {
+        return wishes;
+    }
+    
+    public List<Wish> getAvailableWishesForUser(String username) {
+        User user = null;
+        for (User u : users) {
+            if (u.getUsername().equals(username)) {
+                user = u;
+                break;
+            }
+        }
+        if (user == null) return new java.util.ArrayList<>();
+        
+        List<Wish> available = new java.util.ArrayList<>();
+        for (Wish w : wishes) {
+            if (w.getOwner().equals(username) && 
+                w.getStatus() == WishStatus.PENDING && 
+                user.getTotalPoints() >= w.getCost()) {
+                available.add(w);
+            }
+        }
+        return available;
+    }
+    
+    public boolean purchaseWish(String wishName, String username) {
+        if (currentUser == null || !currentUser.getUsername().equals(username)) {
+            System.out.println("HATA: Yetkisiz işlem.");
+            return false;
+        }
+        
+        User user = null;
+        for (User u : users) {
+            if (u.getUsername().equals(username)) {
+                user = u;
+                break;
+            }
+        }
+        if (user == null) return false;
+        
+        for (Wish w : wishes) {
+            if (w.getName().equals(wishName) && 
+                w.getOwner().equals(username) && 
+                w.getStatus() == WishStatus.PENDING) {
+                
+                if (user.getTotalPoints() >= w.getCost()) {
+                    user.setTotalPoints(user.getTotalPoints() - w.getCost());
+                    w.setStatus(WishStatus.APPROVED);
+                    DataManager.saveUsers(users);
+                    DataManager.saveWishes(wishes);
+                    System.out.println("Wish satın alındı: " + wishName + " (-" + w.getCost() + " puan)");
+                    return true;
+                } else {
+                    System.out.println("Yetersiz puan! Gerekli: " + w.getCost() + ", Mevcut: " + user.getTotalPoints());
+                    return false;
+                }
+            }
+        }
+        return false;
     }
 }
