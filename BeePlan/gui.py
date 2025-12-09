@@ -1,7 +1,7 @@
 import csv
 import os
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from typing import Dict, List
 
 from course import Course
@@ -31,8 +31,8 @@ class SchedulerApp:
         self.instructor_constraints: Dict[str, Dict[str, Dict[str, bool]]] = {}
         self.current_instructor: str | None = None
         
-        # Classrooms data: list of {'name': str, 'capacity': int, 'type': str}
-        self.classrooms: List[Dict[str, str | int]] = []
+        # Classrooms data: list of {'name': str, 'capacity': int, 'type': str, 'assigned_courses': list}
+        self.classrooms: List[Dict[str, str | int | list]] = []
 
         self._build_style()
         self._build_layout()
@@ -171,7 +171,45 @@ class SchedulerApp:
         
         table_wrap = ttk.Frame(self.courses_view, style="Card.TFrame")
         table_wrap.pack(fill="both", expand=True)
-        ttk.Label(table_wrap, text="Sistemdeki Dersler", style="SectionTitle.TLabel").pack(anchor="w", pady=(0, 6))
+        
+        # Header with title and button
+        header_courses = ttk.Frame(table_wrap, style="Card.TFrame")
+        header_courses.pack(fill="x", pady=(0, 6))
+        ttk.Label(header_courses, text="Sistemdeki Dersler", style="SectionTitle.TLabel").pack(anchor="w", side="left", expand=True)
+        ttk.Button(header_courses, text="CSV/JSON Yükle", style="Pill.TButton", command=self._load_courses_from_csv).pack(side="right", padx=6)
+        
+        # Manual course add section
+        input_frame_courses = ttk.Frame(table_wrap, style="Card.TFrame", padding=12, relief="solid")
+        input_frame_courses.pack(fill="x", pady=(0, 12))
+        
+        ttk.Label(input_frame_courses, text="Ders Kodu", style="TLabel").grid(row=0, column=0, sticky="w", padx=(0, 6))
+        self.course_code_entry = ttk.Entry(input_frame_courses, width=15)
+        self.course_code_entry.grid(row=0, column=1, padx=6, pady=4)
+        
+        ttk.Label(input_frame_courses, text="Ders Adı", style="TLabel").grid(row=0, column=2, sticky="w", padx=(12, 6))
+        self.course_name_entry = ttk.Entry(input_frame_courses, width=25)
+        self.course_name_entry.grid(row=0, column=3, padx=6, pady=4)
+        
+        ttk.Label(input_frame_courses, text="Dönem", style="TLabel").grid(row=0, column=4, sticky="w", padx=(12, 6))
+        self.course_term_var = tk.StringVar(value="1")
+        term_combo = ttk.Combobox(input_frame_courses, textvariable=self.course_term_var, values=["1", "2"], state="readonly", width=8)
+        term_combo.grid(row=0, column=5, padx=6, pady=4)
+        
+        ttk.Label(input_frame_courses, text="Sınıf", style="TLabel").grid(row=0, column=6, sticky="w", padx=(12, 6))
+        self.course_class_var = tk.StringVar(value="1")
+        class_combo = ttk.Combobox(input_frame_courses, textvariable=self.course_class_var, values=["1", "2", "3", "4"], state="readonly", width=8)
+        class_combo.grid(row=0, column=7, padx=6, pady=4)
+        
+        ttk.Label(input_frame_courses, text="Saat (T+L)", style="TLabel").grid(row=1, column=0, sticky="w", padx=(0, 6), pady=(8, 4))
+        self.course_hours_entry = ttk.Entry(input_frame_courses, width=15)
+        self.course_hours_entry.grid(row=1, column=1, padx=6, pady=(8, 4))
+        
+        ttk.Label(input_frame_courses, text="Öğretim Elemanı", style="TLabel").grid(row=1, column=2, sticky="w", padx=(12, 6), pady=(8, 4))
+        self.course_instructor_entry = ttk.Entry(input_frame_courses, width=25)
+        self.course_instructor_entry.grid(row=1, column=3, padx=6, pady=(8, 4))
+        
+        button_add_course = ttk.Button(input_frame_courses, text="Ekle", style="Accent.TButton", command=self._add_course_manual)
+        button_add_course.grid(row=1, column=7, padx=12, pady=(8, 4))
 
         columns = ("code", "name", "term", "class", "hours", "instructor")
         self.course_data_tree = ttk.Treeview(table_wrap, columns=columns, show="headings", height=12)
@@ -292,7 +330,6 @@ class SchedulerApp:
         
         button_frame = ttk.Frame(header_frame, style="Card.TFrame")
         button_frame.pack(side="right")
-        ttk.Button(button_frame, text="CSV/JSON Yükle", style="Pill.TButton").pack(side="left", padx=6)
         ttk.Button(button_frame, text="Kaydet", style="Accent.TButton", command=self._save_constraints).pack(side="left", padx=6)
         
         # Availability table
@@ -358,7 +395,6 @@ class SchedulerApp:
         
         button_group = ttk.Frame(header_frame, style="Card.TFrame")
         button_group.pack(side="right")
-        ttk.Button(button_group, text="CSV/JSON Yükle", style="Pill.TButton", command=self._load_classrooms_from_csv).pack(side="left", padx=6)
         ttk.Button(button_group, text="Yeni Ekle", style="Accent.TButton", command=self._add_classroom_dialog).pack(side="left", padx=6)
         
         # Input section for adding new classroom
@@ -390,17 +426,19 @@ class SchedulerApp:
         
         ttk.Label(table_frame, text="Mekanlar", style="SectionTitle.TLabel").pack(anchor="w", pady=(0, 6))
         
-        columns = ("name", "capacity", "type", "operations")
+        columns = ("name", "capacity", "type", "courses", "operations")
         self.classroom_tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=15)
         
         self.classroom_tree.heading("name", text="Mekan Adı")
         self.classroom_tree.heading("capacity", text="Kapasite")
         self.classroom_tree.heading("type", text="Tür")
+        self.classroom_tree.heading("courses", text="Atanmış Dersler")
         self.classroom_tree.heading("operations", text="İşlemler")
         
-        self.classroom_tree.column("name", width=300, anchor="w")
-        self.classroom_tree.column("capacity", width=120, anchor="center")
-        self.classroom_tree.column("type", width=150, anchor="center")
+        self.classroom_tree.column("name", width=200, anchor="w")
+        self.classroom_tree.column("capacity", width=100, anchor="center")
+        self.classroom_tree.column("type", width=100, anchor="center")
+        self.classroom_tree.column("courses", width=250, anchor="w")
         self.classroom_tree.column("operations", width=200, anchor="center")
         
         vsb = ttk.Scrollbar(table_frame, orient="vertical", command=self.classroom_tree.yview)
@@ -503,6 +541,12 @@ class SchedulerApp:
         
         # Add all classrooms to the table
         for idx, classroom in enumerate(self.classrooms):
+            # Ensure assigned_courses list exists
+            if "assigned_courses" not in classroom:
+                classroom["assigned_courses"] = []
+            
+            courses_str = ", ".join(classroom.get("assigned_courses", []))
+            
             self.classroom_tree.insert(
                 "",
                 "end",
@@ -510,6 +554,7 @@ class SchedulerApp:
                     classroom["name"],
                     str(classroom["capacity"]),
                     classroom["type"],
+                    courses_str,
                     "Düzenle  |  Sil"
                 ),
                 tags=(f"row_{idx}",)
@@ -523,22 +568,87 @@ class SchedulerApp:
         self.classroom_tree.bind("<Button-1>", self._on_classroom_row_click)
     
     def _on_classroom_row_click(self, event) -> None:
-        """Handle classroom row click for edit/delete operations."""
+        """Handle classroom row click for operations."""
         item = self.classroom_tree.identify("item", event.x, event.y)
         column = self.classroom_tree.identify_column(event.x)
         
-        if not item or column != "#4":  # Operations column
+        if not item:
             return
         
-        # Get index
         idx = self.classroom_tree.index(item)
         
-        # Show context menu
-        menu = tk.Menu(self.root, tearoff=0)
-        menu.add_command(label="Düzenle", command=lambda: self._edit_classroom(idx))
-        menu.add_command(label="Sil", command=lambda: self._delete_classroom_confirm(idx))
-        menu.post(event.x_root, event.y_root)
+        # Column 4 is "Dersler" (courses) - allow assigning courses
+        if column == "#4":
+            self._assign_courses_to_classroom(idx)
+        # Column 5 is "İşlemler" (operations) - edit/delete
+        elif column == "#5":
+            menu = tk.Menu(self.root, tearoff=0)
+            menu.add_command(label="Düzenle", command=lambda: self._edit_classroom(idx))
+            menu.add_command(label="Sil", command=lambda: self._delete_classroom_confirm(idx))
+            menu.post(event.x_root, event.y_root)
     
+    def _assign_courses_to_classroom(self, classroom_idx: int) -> None:
+        """Open dialog to assign courses to a classroom."""
+        if not (0 <= classroom_idx < len(self.classrooms)):
+            return
+        
+        classroom = self.classrooms[classroom_idx]
+        
+        # Check if there are any courses loaded
+        if not self.courses:
+            messagebox.showwarning("Uyarı", "Henüz ders yüklenmemiştir. Lütfen önce dersler sekmesinde dersleri yükleyiniz.")
+            return
+        
+        # Create modal dialog
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"{classroom['name']} - Dersler Ata")
+        dialog.geometry("400x500")
+        dialog.configure(bg="white")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # Label
+        ttk.Label(dialog, text=f"Mekan: {classroom['name']}", style="SectionTitle.TLabel").pack(pady=10, padx=10)
+        ttk.Label(dialog, text=f"Atanacak dersler: ({len(self.courses)} ders)", font=("Segoe UI", 10)).pack(pady=(10, 5), padx=10, anchor="w")
+        
+        # Frame for listbox with scrollbar
+        frame = ttk.Frame(dialog)
+        frame.pack(pady=10, padx=10, fill="both", expand=True)
+        
+        scrollbar = ttk.Scrollbar(frame)
+        scrollbar.pack(side="right", fill="y")
+        
+        listbox = tk.Listbox(frame, selectmode="multiple", yscrollcommand=scrollbar.set, height=15, bg="white", fg="black", font=("Segoe UI", 10))
+        listbox.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=listbox.yview)
+        
+        # Add courses to listbox
+        current_assignments = set(classroom.get("assigned_courses", []))
+        course_list = []
+        
+        for course_id, course in sorted(self.courses.items(), key=lambda x: x[1].name):
+            display_text = f"{course.code} - {course.name}"
+            listbox.insert("end", display_text)
+            course_list.append((course_id, course))
+            
+            # Pre-select if already assigned
+            if course.code in current_assignments:
+                listbox.selection_set("end")
+        
+        # Buttons frame
+        btn_frame = ttk.Frame(dialog)
+        btn_frame.pack(pady=10, padx=10, fill="x")
+        
+        def save_assignments():
+            selected_indices = listbox.curselection()
+            assigned_codes = [course_list[i][1].code for i in selected_indices]
+            classroom["assigned_courses"] = assigned_codes
+            self._populate_classrooms_tree()
+            dialog.destroy()
+        
+        ttk.Button(btn_frame, text="Kaydet", command=save_assignments, style="Accent.TButton").pack(side="right", padx=5)
+        ttk.Button(btn_frame, text="İptal", command=dialog.destroy).pack(side="right", padx=5)
+
     def _delete_classroom_confirm(self, index: int) -> None:
         """Confirm delete before removing classroom."""
         if 0 <= index < len(self.classrooms):
@@ -632,9 +742,87 @@ class SchedulerApp:
         ttk.Button(button_frame, text="İptal", style="Pill.TButton", command=edit_window.destroy).pack(side="left", padx=6)
     
     def _load_classrooms_from_csv(self) -> None:
-        """Load classrooms from CSV file."""
-        # TODO: Implement CSV loading for classrooms
-        messagebox.showinfo("Bilgi", "CSV yükleme özelliği yakında eklenecek.")
+        """Load classrooms from CSV file.
+
+        Accepts CSV files that contain columns for classroom name, capacity and type.
+        Header names are matched case-insensitively and tolerant to variants
+        (e.g. 'Name', 'Mekan Adı', 'Capacity', 'Kapasite', 'Type', 'Tür').
+        Lab capacities greater than 40 will be clamped to 40 and reported to the user.
+        """
+        path = filedialog.askopenfilename(title="CSV Dosyası Seçin", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+        if not path:
+            return
+
+        try:
+            with open(path, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                fieldnames = [h.strip().lower() for h in (reader.fieldnames or [])]
+                # map common header names to actual header
+                def find_field(*candidates):
+                    for c in candidates:
+                        if c.lower() in fieldnames:
+                            # return original header from reader.fieldnames with same lower
+                            for orig in (reader.fieldnames or []):
+                                if orig.strip().lower() == c.lower():
+                                    return orig
+                    return None
+
+                name_field = find_field('name', 'mekan adı', 'mekan', 'room', 'roomname')
+                cap_field = find_field('capacity', 'kapasite', 'cap')
+                type_field = find_field('type', 'tür', 'tur', 'kind')
+
+                added = 0
+                warnings = []
+                for row in reader:
+                    # read fields with fallback
+                    name = (row.get(name_field) or '').strip() if name_field else ''
+                    if not name:
+                        # try first non-empty cell as a fallback
+                        for v in row.values():
+                            if v and str(v).strip():
+                                name = str(v).strip()
+                                break
+                    cap_raw = (row.get(cap_field) or '').strip() if cap_field else ''
+                    typ = (row.get(type_field) or '').strip() if type_field else ''
+                    typ = typ if typ else 'Derslik'
+
+                    try:
+                        capacity = int(cap_raw) if cap_raw else 0
+                    except Exception:
+                        capacity = 0
+
+                    if capacity <= 0:
+                        warnings.append(f"{name or '<isim yok>'}: geçersiz kapasite '{cap_raw}' - atlandı")
+                        continue
+
+                    if typ.lower().startswith('lab') and capacity > 40:
+                        warnings.append(f"{name}: Lab kapasitesi max 40, {capacity} -> 40 olarak ayarlandı")
+                        capacity = 40
+
+                    # avoid duplicates
+                    if any(c['name'].lower() == name.lower() for c in self.classrooms):
+                        warnings.append(f"{name}: zaten mevcut - atlandı")
+                        continue
+
+                    self.classrooms.append({
+                        'name': name,
+                        'capacity': capacity,
+                        'type': typ
+                    })
+                    added += 1
+
+            # refresh UI
+            self._populate_classrooms_tree()
+
+            msg = f"{added} mekan yüklendi."
+            if warnings:
+                msg += "\nUyarılar:\n" + "\n".join(warnings[:20])
+                if len(warnings) > 20:
+                    msg += f"\n... ve {len(warnings)-20} daha"
+            messagebox.showinfo("Yüklendi", msg)
+
+        except Exception as exc:
+            messagebox.showerror("Hata", f"CSV okunamadı: {exc}")
     
     def _build_rules_view(self) -> None:
         """Build the rules viewer with rule cards."""
@@ -811,6 +999,78 @@ class SchedulerApp:
         """Save instructor constraints."""
         # TODO: Save to file (CSV/JSON)
         messagebox.showinfo("Kaydedildi", "Öğretim elemanı kısıtları kaydedildi.")
+    
+    def _add_course_manual(self) -> None:
+        """Manually add a single course."""
+        code = self.course_code_entry.get().strip()
+        name = self.course_name_entry.get().strip()
+        term_str = self.course_term_var.get().strip()
+        class_str = self.course_class_var.get().strip()
+        hours_str = self.course_hours_entry.get().strip()
+        instructor = self.course_instructor_entry.get().strip()
+        
+        if not code:
+            messagebox.showwarning("Hata", "Lütfen ders kodunu giriniz.")
+            return
+        if not name:
+            messagebox.showwarning("Hata", "Lütfen ders adını giriniz.")
+            return
+        if not hours_str:
+            messagebox.showwarning("Hata", "Lütfen saat bilgisini giriniz (örn: 3+2).")
+            return
+        
+        try:
+            term = int(term_str) if term_str else 1
+            class_year = int(class_str) if class_str else 1
+        except ValueError:
+            messagebox.showerror("Hata", "Dönem ve sınıf sayı olmalıdır.")
+            return
+        
+        # Parse hours (format: "3+2" or "3")
+        from csv_processor import CSVProcessor
+        theory_hours, lab_hours, hours_raw = CSVProcessor._parse_hours(hours_str)
+        
+        # Create Course object
+        course_id = max([c.get_course_id() for c in self.courses.values()] + [0]) + 1
+        course = Course(
+            course_id,
+            code,
+            term,
+            class_year,
+            theory_hours=theory_hours,
+            lab_hours=lab_hours,
+            hours_text=hours_raw,
+            instructor=instructor
+        )
+        
+        self.courses[course_id] = course
+        
+        # Clear inputs
+        self.course_code_entry.delete(0, tk.END)
+        self.course_name_entry.delete(0, tk.END)
+        self.course_hours_entry.delete(0, tk.END)
+        self.course_instructor_entry.delete(0, tk.END)
+        self.course_term_var.set("1")
+        self.course_class_var.set("1")
+        
+        # Refresh table
+        self._populate_course_data_tree()
+        messagebox.showinfo("Başarılı", f"'{code}' dersi başarıyla eklendi.")
+    
+    def _load_courses_from_csv(self) -> None:
+        """Load courses from CSV file (NEWcourses_full.csv format)."""
+        path = filedialog.askopenfilename(title="CSV Dosyası Seçin", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+        if not path:
+            return
+        
+        try:
+            # Use CSVProcessor to load courses
+            loaded_courses = CSVProcessor.load_courses(path)
+            self.courses.update(loaded_courses)
+            self._populate_course_data_tree()
+            messagebox.showinfo("Başarılı", f"{len(loaded_courses)} ders yüklendi.")
+        except Exception as exc:
+            messagebox.showerror("Hata", f"CSV okunamadı: {exc}")
     
     def _populate_course_data_tree(self) -> None:
         if not hasattr(self, "course_data_tree"):

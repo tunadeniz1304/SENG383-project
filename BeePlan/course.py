@@ -65,6 +65,16 @@ class Course:
     def get_instructor(self) -> str:
         return self.instructor
 
+    @property
+    def code(self) -> str:
+        """Return course code (course_id as string)."""
+        return str(self.course_id)
+
+    @property
+    def name(self) -> str:
+        """Return course name."""
+        return self.course_name
+
     def __str__(self) -> str:
         result = f"Course: {self.course_name} (ID: {self.course_id})\n"
         for section in self.sections:
