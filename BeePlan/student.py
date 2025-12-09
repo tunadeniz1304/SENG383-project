@@ -1,29 +1,30 @@
 class Student:
     def __init__(self, email: str, password: str) -> None:
-        pass
+        self.email = email
+        self.password = password
+        self.class_year = 0
+        self.term = 0
 
     def get_email(self) -> str:
-        pass
+        return self.email
 
     def set_email(self, email: str) -> None:
-        pass
+        self.email = email
 
     def get_password(self) -> str:
-        pass
+        return self.password
 
     def set_password(self, password: str) -> None:
-        pass
+        self.password = password
 
     def get_class_year(self) -> int:
-        pass
+        return self.class_year
 
     def set_class_year(self, class_year: int) -> None:
-        pass
+        self.class_year = class_year
 
     def get_term(self) -> int:
-        pass
+        return self.term
 
     def set_term(self, term: int) -> None:
-        pass
-
-
+        self.term = term
