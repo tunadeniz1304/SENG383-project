@@ -28,3 +28,5 @@ Starting with creating the files and writing classes according to the class diag
 Forming the implementation of KidTask by:Tuna
 There had been slight misunderstading with the GUI concept so we improvised and changed it as asked in the file.
 Forming the implementation of BeePlan by:Doğukan
+
+Testing
