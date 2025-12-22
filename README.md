@@ -2,7 +2,7 @@
 
 This repository is developed as part of the SENG383 course, showcasing a collaborative software development process. The project focuses on an interactive workflow where two developers build features while simultaneously performing cross-checks and peer reviews on each other's contributions. This approach ensures high code quality and fosters a professional environment for software verification and collaborative problem-solving.
 
-###Design
+### Design
 
 Design Part includes GUI design , activity diagram and class diagram of the projects Beeplan and Kidtask
 
