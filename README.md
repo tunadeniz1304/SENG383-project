@@ -20,7 +20,7 @@ Reviewing peer's submissions: 12.11.2025 lab lesson
 
 Missings and faults of Designs created by Tuna:
 1-Dividing activity diagram for users perspectively.
-
+ 
 
 
 17.11.2025
