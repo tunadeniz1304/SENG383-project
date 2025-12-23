@@ -1,4 +1,0 @@
-admin,123,PARENT,0
-ali,123,CHILD,30
-ogretmen,123,TEACHER,0
-anne,123,PARENT,0
