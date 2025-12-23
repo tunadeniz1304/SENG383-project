@@ -1,0 +1,3 @@
+Sinemaya Gitmek,50,ali,PENDING,0
+Oyuncak Mağazasından Oyuncak Seçmek,100,ali,PENDING,0
+Pizza Siparişi Vermek,30,ali,APPROVED,0
